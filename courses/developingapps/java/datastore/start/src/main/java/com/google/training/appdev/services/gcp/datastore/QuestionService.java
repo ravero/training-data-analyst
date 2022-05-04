@@ -50,56 +50,16 @@ public class QuestionService {
     }
 
     public List<Question> getAllQuestions(String quiz){
-
-// TODO: Remove this code
-
-        List<Question> questions = new ArrayList<>();
-        Question dummy = new Question.Builder()
-                .withQuiz("gcp")
-                .withAuthor("Dummy Author")
-                .withTitle("Dummy Title")
-                .withAnswerOne("Dummy Answer One")
-                .withAnswerTwo("Dummy Answer Two")
-                .withAnswerThree("Dummy Answer Three")
-                .withAnswerFour("Dummy Answer Four")
-                .withCorrectAnswer(1)
-                .withId(-1)
+        Query<Entity> query = Query.newEntityQueryBuilder()
+                .setKind(ENTITY_KIND)
+                .setFilter(StructuredQuery.PropertyFilter.eq(Question.QUIZ, quiz))
                 .build();
-        questions.add(dummy);
 
-        return questions;
-
-// END TODO
-
- // TODO: Create the query
- // The Query class has a static newEntityQueryBuilder() 
- // method that allows you to specify the kind(s) of 
- // entities to be retrieved.
- // The query can be customized to filter the Question 
- // entities for one quiz.
-
-
- // END TODO
-
- // TODO: Execute the query
- // The datastore.run(query) method returns an iterator
- // for entities
-
-
- // END TODO
-
- // TODO: Return the transformed results
- // Use the buildQuestions(entities) method to convert
- // from Datastore entities to domain objects
-
-
-
- // END TODO
-
+        Iterator<Entity> entities = datastore.run(query);
+        return buildQuestions(entities);
     }
 
 
-/* TODO: Uncomment this block
 
     private List<Question> buildQuestions(Iterator<Entity> entities){
         List<Question> questions = new ArrayList<>();
@@ -121,5 +81,4 @@ public class QuestionService {
                 .build();
     }
 
-*/
 }
