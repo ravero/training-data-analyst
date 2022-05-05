@@ -11,3 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+runtime: java
+env: flex
+runtime_config:
+  jdk: openjdk8
+handlers:
+  - url: /.*
+    script: this field is required, but ignored
+manual_scaling:
+  instances: 1
+resources:
+  cpu: 1
+  memory_gb: 3.75
+  disk_size_gb: 10
+env_variables:
+  GCLOUD_BUCKET: qwiklabs-gcp-03-17e36ad485b6-media
