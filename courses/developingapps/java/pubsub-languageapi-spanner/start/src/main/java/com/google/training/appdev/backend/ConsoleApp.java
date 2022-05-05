@@ -35,25 +35,13 @@ import com.google.training.appdev.services.gcp.spanner.SpannerService;
 public class ConsoleApp {
 
     public static void main(String... args) throws Exception {
-
-
         String projectId = System.getenv("GCLOUD_PROJECT");
         System.out.println("Project: " + projectId);
 
-
         // Notice that the code to create the topic is the same as in the publisher
         TopicName topic = TopicName.create(projectId, "feedback");
-
-        // TODO: Create the languageService
-
-
-        // END TODO
-
-        // TODO: Create the spannerService
-
-
-        // END TODO
-
+        LanguageService languageService = LanguageService.create();
+        SpannerService spannerService = SpannerService.create();
         SubscriptionName subscription = SubscriptionName.create(projectId, "worker1-subscription");
 
         try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
@@ -75,18 +63,13 @@ public class ConsoleApp {
                     Feedback feedback = mapper.readValue(fb, Feedback.class);
                     System.out.println("Feedback received: " + feedback);
 
-                    // TODO: Use the Natural Language API to analyze sentiment
-
-
-                    // END TODO
-
-                    // TODO: Set the feedback object sentiment score
-
-
-                    // END TODO
+                    float sentimentScore = languageService.analyzeSentiment(feedback.getFeedback());
+                    feedback.setSentimentScore(sentimentScore);
+                    System.out.println("Score is: " + sentimentScore);
 
                     // TODO: Insert the feedback into Cloud Spanner
-
+                    spannerService.insertFeedback(feedback);
+                    System.out.println("Feedback saved");
 
                     // END TODO
 

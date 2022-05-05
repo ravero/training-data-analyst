@@ -27,33 +27,19 @@ public class LanguageService {
         return languageService;
     }
 
-    public float analyzeSentiment(String feedback)throws Exception{
-        // TODO: Create the LanguageServiceClient object
+    public float analyzeSentiment(String feedback) throws Exception{
+        try (LanguageServiceClient language = LanguageServiceClient.create()) {
+            Document doc = Document.newBuilder()
+                    .setContent(feedback)
+                    .setType(Document.Type.PLAIN_TEXT)
+                    .build();
 
-        
-            // TODO: Create a new Document object using the builder
-            // Set the content and type
+            Sentiment sentiment = language
+                    .analyzeSentiment(doc)
+                    .getDocumentSentiment();
 
-            
-
-
-            // END TODO
-
-            // TODO: Use the client to analyze the sentiment of the feedback
-
-            
-
-            // END TODO
-
-            // TODO: Return the sentiment score instead of 0.0f;
-
-            return 0.0f;
-
-            // END TODO
-        
-
-        // END TODO
-
+            return sentiment.getScore();
+        }
     }
     private LanguageService(){ }
 }
