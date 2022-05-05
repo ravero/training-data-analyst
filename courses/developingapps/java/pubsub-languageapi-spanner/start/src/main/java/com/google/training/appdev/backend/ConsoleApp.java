@@ -16,6 +16,7 @@
 package com.google.training.appdev.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.core.ApiService;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
@@ -27,160 +28,102 @@ import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 
 
-
 import com.google.training.appdev.services.gcp.domain.Feedback;
 import com.google.training.appdev.services.gcp.languageapi.LanguageService;
 import com.google.training.appdev.services.gcp.spanner.SpannerService;
 
 public class ConsoleApp {
 
-  public static void main(String... args) throws Exception {
+    public static void main(String... args) throws Exception {
 
 
-    String projectId = System.getenv("GCLOUD_PROJECT");
-    System.out.println("Project: " + projectId);
+        String projectId = System.getenv("GCLOUD_PROJECT");
+        System.out.println("Project: " + projectId);
 
 
-    // Notice that the code to create the topic is the same as in the publisher
-    TopicName topic = TopicName.create(projectId, "feedback");
+        // Notice that the code to create the topic is the same as in the publisher
+        TopicName topic = TopicName.create(projectId, "feedback");
 
-    // TODO: Create the languageService
+        // TODO: Create the languageService
 
-    
 
-    // END TODO
+        // END TODO
 
-    // TODO: Create the spannerService
+        // TODO: Create the spannerService
 
-    
 
-    // END TODO
+        // END TODO
 
-    // TODO: Create the Pub/Sub subscription name
+        SubscriptionName subscription = SubscriptionName.create(projectId, "worker1-subscription");
 
-    
-
-    // END TODO
-    
-    // TODO: Create the subscriptionAdminClient
-
-    
-
-      // TODO: create the Pub/Sub subscription using the subscription name and topic
-
-      
-
-      // END TODO
-      
-    
-
-    // END TODO
-
-    // The message receiver processes Pub/Sub subscription messages
-    MessageReceiver receiver = new MessageReceiver() {
-        // Override the receiveMessage(...) method
-        @Override
-        public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-            // TODO: Extract the message data as a JSON String
-
-            
-
-            // END TODO
-
-            // TODO: Ack the message
-
-            
-
-            // END TODO
-
-            try {
-                // Object mapper deserializes the JSON String
-                ObjectMapper mapper = new ObjectMapper();
-
-                // TODO: Deserialize the JSON String representing the feedback
-
-                
-
-                // END TODO
-
-                // TODO: Use the Natural Language API to analyze sentiment
-
-                
-
-                // END TODO
-
-                // TODO: Set the feedback object sentiment score
-
-                
-
-                // END TODO
-
-                // TODO: Insert the feedback into Cloud Spanner
-
-                
-
-                // END TODO
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
+            subscriptionAdminClient.createSubscription(subscription, topic, PushConfig.getDefaultInstance(), 0);
         }
-    };
 
-    // TODO: Declare a subscriber
+        // The message receiver processes Pub/Sub subscription messages
+        MessageReceiver receiver = new MessageReceiver() {
+            // Override the receiveMessage(...) method
+            @Override
+            public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
+                String fb = message.getData().toStringUtf8();
+                consumer.ack();
 
-    
+                try {
+                    // Object mapper deserializes the JSON String
+                    ObjectMapper mapper = new ObjectMapper();
 
-    // END TODO
+                    Feedback feedback = mapper.readValue(fb, Feedback.class);
+                    System.out.println("Feedback received: " + feedback);
 
-    try {
-
-        // TODO: Initialize the subscriber using its default builder
-        // with a subscription and receiver
-
-        
-
-        // END TODO
-
-        // TODO: Add a listener to the subscriber
-
-        
-        
+                    // TODO: Use the Natural Language API to analyze sentiment
 
 
+                    // END TODO
+
+                    // TODO: Set the feedback object sentiment score
 
 
-        // END TODO
+                    // END TODO
 
-        // TODO: Start subscribing
-
-        
-        
-
-        // END TODO
-
-        System.out.println("Started. Press any key to quit and remove subscription");
-
-        System.in.read();
-
-    } finally {
-        
-        // TODO: Stop subscribing
-
-        
-
-        // END TODO
-        
-
-        // TODO: Delete the subscription
-
-        
-        
+                    // TODO: Insert the feedback into Cloud Spanner
 
 
+                    // END TODO
 
-        // END TODO
-    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Subscriber subscriber = null;
+
+
+        try {
+            subscriber = Subscriber.defaultBuilder(subscription, receiver).build();
+            subscriber.addListener(
+                    new Subscriber.Listener() {
+                        @Override
+                        public void failed(ApiService.State from, Throwable failure) {
+                            System.err.println(failure);
+                        }
+                    },
+                    MoreExecutors.directExecutor()
+            );
+
+            subscriber.startAsync().awaitRunning();
+            System.out.println("Started. Press any key to quit and remove subscription");
+            System.in.read();
+
+        } finally {
+            if (subscriber != null) {
+                subscriber.stopAsync().awaitTerminated();
+            }
+            try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
+                subscriptionAdminClient.deleteSubscription(subscription);
+            }
+
+        }
     }
 
 }
