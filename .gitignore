@@ -1,5 +1,6 @@
 *.pyc
 .DS_Store
+.idea
 
 courses/machine_learning/deepdive/03_tensorflow/.ipynb_checkpoints/c_dataset-checkpoint.ipynb
 courses/machine_learning/deepdive/03_tensorflow/.ipynb_checkpoints/d_traineval-checkpoint.ipynb
